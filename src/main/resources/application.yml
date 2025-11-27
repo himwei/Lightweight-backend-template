@@ -1,0 +1,82 @@
+server:
+  port: 8123
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: testTemplateBackEnd
+  profiles:
+    active: local
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/test-template-backend-app?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: 123456
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 2
+      password:
+      timeout: 5s
+      lettuce:
+        pool:
+          max-active: 200
+          max-wait: -1ms
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+sa-token:
+  token-name: satoken
+  timeout: 2592000
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: true
+  # 2. 临时有效期（活跃超时），比如 1800 秒 (30分钟)
+  # 只要用户在 30 分钟内访问了接口，Redis 的 TTL 就会自动重置为 2592000
+#  active-timeout: 1800
+  active-timeout: -1
+
+# 自定义项目配置
+project:
+  security:
+    # 密码加密的盐值 (随便写一串复杂的字符)
+    salt: "himwei_template_salt_!@#2025"
+
+# SpringDoc 配置 (Knife4j 底层依赖这个)
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.himwei.testtemplatebackend.controller
+
+# Knife4j 增强配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+

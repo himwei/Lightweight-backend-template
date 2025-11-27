@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>登录测试 - SpringBoot3 + SaToken</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; }
+        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 400px; }
+        h2 { text-align: center; margin-bottom: 20px; color: #333; }
+        .form-item { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #40a9ff; }
+        #result { margin-top: 20px; padding: 10px; background: #f6f6f6; border-radius: 4px; font-size: 13px; white-space: pre-wrap; word-break: break-all; min-height: 50px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>系统登录</h2>
+    <div class="form-item">
+        <label>用户名 (Username)</label>
+        <input type="text" id="username" value="admin" placeholder="请输入用户名">
+    </div>
+    <div class="form-item">
+        <label>密码 (Password)</label>
+        <input type="password" id="password" value="123456" placeholder="请输入密码">
+    </div>
+    <button onclick="doLogin()">登 录</button>
+
+    <div id="result">等待操作...</div>
+</div>
+
+<script>
+    // 配置 API 基础路径 (根据你的 yml 配置: context-path: /api)
+    const BASE_URL = '/api';
+
+    async function doLogin() {
+        const usernameVal = document.getElementById('username').value;
+        const passwordVal = document.getElementById('password').value;
+        const resultDiv = document.getElementById('result');
+
+        resultDiv.innerText = "正在请求...";
+        resultDiv.className = "";
+
+        // 构建 Form Data 格式提交 (因为后端没有用 @RequestBody)
+        const formData = new FormData();
+        formData.append('username', usernameVal); // 注意：这里要和 Java 方法参数名一致
+        formData.append('password', passwordVal);
+
+        try {
+            const response = await fetch(`${BASE_URL}/user/login`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            // 格式化展示 JSON
+            resultDiv.innerText = JSON.stringify(data, null, 4);
+
+            if (data.code === 0) { // 假设 code 0 代表成功
+                resultDiv.innerHTML += '\n\n<span class="success">✅ 登录成功！Cookie 已写入。</span>';
+                console.log("登录成功，用户信息：", data.data);
+            } else {
+                resultDiv.innerHTML += `\n\n<span class="error">❌ 登录失败: ${data.message}</span>`;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            resultDiv.innerHTML = `<span class="error">❌ 请求异常，请检查控制台 (F12)。\n原因可能是接口 404 或后端未启动。</span>`;
+        }
+    }
+</script>
+
+</body>
+</html>
