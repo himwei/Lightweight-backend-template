@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.himwei.testtemplatebackend.mapper.TRegistrationMapper">
+
+    <resultMap id="BaseResultMap" type="com.himwei.testtemplatebackend.model.entity.TRegistration">
+            <id property="id" column="id" />
+            <result property="scheduleId" column="schedule_id" />
+            <result property="patientUserId" column="patient_user_id" />
+            <result property="status" column="status" />
+            <result property="visitTime" column="visit_time" />
+            <result property="diagnosis" column="diagnosis" />
+            <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,schedule_id,patient_user_id,status,visit_time,diagnosis,
+        create_time
+    </sql>
+
+
+    <select id="selectRegistrationVOList" resultType="com.himwei.testtemplatebackend.model.vo.RegistrationVO">
+        SELECT
+        r.id,
+        r.status,
+        r.diagnosis,
+
+        -- 排班信息
+        s.work_date AS workDate,
+        s.shift_type AS shiftType,
+
+        -- 医生信息 (通过排班表找医生，再通过医生找User和Dept)
+        u_doc.nickname AS doctorName,
+        dep.dept_name AS deptName,
+        doc.price,
+
+        -- 患者信息
+        u_pat.nickname AS patientName,
+        u_pat.phone AS patientPhone
+
+        FROM t_registration r
+        -- 1. 关联排班表
+        LEFT JOIN t_schedule s ON r.schedule_id = s.id
+        -- 2. 关联医生表 (为了拿 user_id 和 dept_id)
+        LEFT JOIN t_doctor doc ON s.doctor_id = doc.id
+        -- 3. 关联科室表
+        LEFT JOIN t_department dep ON doc.dept_id = dep.id
+        -- 4. 关联系统用户表 (取医生名字)
+        LEFT JOIN sys_user u_doc ON doc.user_id = u_doc.id
+        -- 5. 关联系统用户表 (取患者名字)
+        LEFT JOIN sys_user u_pat ON r.patient_user_id = u_pat.id
+
+        <where>
+            <!-- 如果传入了 patientId，就是患者在查自己的挂号单 -->
+            <if test="patientId != null">
+                AND r.patient_user_id = #{patientId}
+            </if>
+            <!-- 如果传入了 doctorId，就是医生在查预约了自己的病人 -->
+            <if test="doctorId != null">
+                AND s.doctor_id = #{doctorId}
+            </if>
+        </where>
+        ORDER BY s.work_date DESC, r.create_time DESC
+    </select>
+
+</mapper>
