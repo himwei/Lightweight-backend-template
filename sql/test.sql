@@ -57,3 +57,71 @@ CREATE TABLE `sys_log` (
                            `cost_time` bigint DEFAULT '0' COMMENT '消耗时间(ms)',
                            PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='系统操作日志表';
+
+
+
+
+-- ==========================================
+-- 1. 科室表 (t_department)
+-- 相当于选课系统里的“学院/专业”
+-- ==========================================
+CREATE TABLE `t_department` (
+                                `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                `dept_name` varchar(50) NOT NULL COMMENT '科室名称 (如: 心内科)',
+                                `dept_code` varchar(50) DEFAULT NULL COMMENT '科室编码',
+                                `location` varchar(100) DEFAULT NULL COMMENT '诊室位置',
+                                `intro` varchar(500) DEFAULT NULL COMMENT '科室介绍',
+                                `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+                                PRIMARY KEY (`id`)
+) ENGINE=InnoDB COMMENT='科室管理表';
+
+-- ==========================================
+-- 2. 医生详情表 (t_doctor)
+-- 注意：医生也是用户，这里只存医生的专业信息，通过 user_id 关联 sys_user
+-- ==========================================
+CREATE TABLE `t_doctor` (
+                            `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                            `user_id` bigint NOT NULL COMMENT '关联 sys_user 的 id',
+                            `dept_id` bigint NOT NULL COMMENT '关联 t_department 的 id',
+                            `title` varchar(50) DEFAULT '主治医师' COMMENT '职称 (主任/副主任/主治)',
+                            `price` decimal(10,2) DEFAULT '0.00' COMMENT '挂号费',
+                            `intro` text COMMENT '医生简介',
+                            `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+                            PRIMARY KEY (`id`),
+                            UNIQUE KEY `uk_user_id` (`user_id`), -- 一个用户只能对应一个医生档案
+                            KEY `idx_dept_id` (`dept_id`)
+) ENGINE=InnoDB COMMENT='医生信息表';
+
+-- ==========================================
+-- 3. 排班表 (t_schedule)
+-- 相当于“课程表”，定义哪个医生在哪天有号
+-- ==========================================
+CREATE TABLE `t_schedule` (
+                              `id` bigint NOT NULL AUTO_INCREMENT COMMENT '排班ID',
+                              `doctor_id` bigint NOT NULL COMMENT '关联 t_doctor 的 id',
+                              `work_date` date NOT NULL COMMENT '出诊日期 (2023-11-11)',
+                              `shift_type` int DEFAULT '1' COMMENT '时段 (1:上午 2:下午)',
+                              `quota` int DEFAULT '30' COMMENT '号源总数',
+                              `booked_num` int DEFAULT '0' COMMENT '已挂号数量',
+                              `status` int DEFAULT '1' COMMENT '状态 (1:正常 0:停诊)',
+                              `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+                              PRIMARY KEY (`id`),
+                              KEY `idx_doctor_date` (`doctor_id`, `work_date`)
+) ENGINE=InnoDB COMMENT='医生排班表';
+
+-- ==========================================
+-- 4. 挂号记录表 (t_registration)
+-- 相当于“选课表”，多对多关系核心
+-- ==========================================
+CREATE TABLE `t_registration` (
+                                  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '挂号单ID',
+                                  `schedule_id` bigint NOT NULL COMMENT '关联 t_schedule 的 id',
+                                  `patient_user_id` bigint NOT NULL COMMENT '患者ID (关联 sys_user)',
+                                  `status` int DEFAULT '0' COMMENT '状态 (0:已预约 1:已完成 2:已取消)',
+                                  `visit_time` datetime DEFAULT NULL COMMENT '实际就诊时间',
+                                  `diagnosis` varchar(1000) DEFAULT NULL COMMENT '医生诊断结果/医嘱',
+                                  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '预约时间',
+                                  PRIMARY KEY (`id`),
+                                  KEY `idx_patient` (`patient_user_id`),
+                                  KEY `idx_schedule` (`schedule_id`)
+) ENGINE=InnoDB COMMENT='挂号记录表';

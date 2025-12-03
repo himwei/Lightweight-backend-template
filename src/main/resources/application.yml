@@ -41,6 +41,8 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+  mapper-locations: classpath:generator/mapper/*.xml
+  type-aliases-package: com.himwei.testtemplatebackend.model.entity
 
 sa-token:
   token-name: satoken

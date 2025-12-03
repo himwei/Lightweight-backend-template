@@ -12,7 +12,9 @@ import lombok.Getter;
 public enum RoleEnum {
 
     ADMIN("admin", 1L, "超级管理员"),
-    USER("user", 2L, "普通用户");
+    USER("user", 2L, "普通用户"),
+    DOCTOR("doctor", 4L, "医生"),
+    PATIENT("patient", 5L, "患者");
 
     private final String code;
     private final Long id;
@@ -28,5 +30,12 @@ public enum RoleEnum {
             }
         }
         return null;
+    }
+
+    /**
+     * 根据RoleEnum获取 code
+     */
+    public static String getCodeByRole(RoleEnum role) {
+        return role.getCode();
     }
 }
