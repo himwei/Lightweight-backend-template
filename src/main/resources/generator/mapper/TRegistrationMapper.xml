@@ -11,12 +11,13 @@
             <result property="status" column="status" />
             <result property="visitTime" column="visit_time" />
             <result property="diagnosis" column="diagnosis" />
+        <result property="updateTime" column="update_time"/>
             <result property="createTime" column="create_time" />
     </resultMap>
 
     <sql id="Base_Column_List">
         id,schedule_id,patient_user_id,status,visit_time,diagnosis,
-        create_time
+        create_time,update_time
     </sql>
 
 
@@ -25,7 +26,7 @@
         r.id,
         r.status,
         r.diagnosis,
-
+        r.create_time,
         -- 排班信息
         s.work_date AS workDate,
         s.shift_type AS shiftType,

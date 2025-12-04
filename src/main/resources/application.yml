@@ -54,7 +54,7 @@ sa-token:
   # 2. 临时有效期（活跃超时），比如 1800 秒 (30分钟)
   # 只要用户在 30 分钟内访问了接口，Redis 的 TTL 就会自动重置为 2592000
 #  active-timeout: 1800
-  active-timeout: -1
+  active-timeout: 1800
 
 # 自定义项目配置
 project:

@@ -66,10 +66,10 @@ public class UserController {
      * 分页查询用户列表 - 需要 admin 角色
      * 注意：查询列表通常数据量较大，建议设置 isSaveResponseData = false 不记录返回结果，节省数据库空间
      */
-    @GetMapping("/page")
+    @PostMapping("/page")
     @SaCheckRole("admin")
     @Log(title = "用户管理", businessType = "分页查询用户", isSaveResponseData = false)
-    public BaseResponse<IPage<UserVO>> pageUsers(UserQueryDTO queryDTO) {
+    public BaseResponse<IPage<UserVO>> pageUsers(@RequestBody UserQueryDTO queryDTO) {
         IPage<UserVO> page = sysUserService.pageUsers(queryDTO);
         return ResultUtils.success(page);
     }
@@ -91,9 +91,20 @@ public class UserController {
     @PostMapping("/update")
     @SaCheckRole("admin")
     @Log(title = "用户管理", businessType = "修改用户")
-    public BaseResponse<Void> updateUser(@RequestBody @Valid UserUpdateDTO updateDTO) {
-        sysUserService.updateUser(updateDTO);
-        return ResultUtils.success(null);
+    public BaseResponse<Boolean> updateUser(@RequestBody @Valid UserUpdateDTO updateDTO) {
+        boolean b = sysUserService.updateUser(updateDTO);
+        return ResultUtils.success(b);
+    }
+
+    /**
+     * 修改用户 - 需要 admin 角色
+     */
+    @PostMapping("/resetPwd")
+    @SaCheckRole("admin")
+    @Log(title = "用户管理", businessType = "重置密码")
+    public BaseResponse<Boolean> resetPwd(@RequestBody @Valid UserResetPwdDTO resetPwdDTO) {
+        boolean b = sysUserService.resetPwd(resetPwdDTO);
+        return ResultUtils.success(b);
     }
 
     /**
@@ -102,9 +113,9 @@ public class UserController {
     @PostMapping("/delete/{id}")
     @SaCheckRole("admin")
     @Log(title = "用户管理", businessType = "删除用户")
-    public BaseResponse<Void> deleteUser(@PathVariable Long id) {
-        sysUserService.deleteUser(id);
-        return ResultUtils.success(null);
+    public BaseResponse<Boolean> deleteUser(@PathVariable Long id) {
+        boolean b = sysUserService.deleteUser(id);
+        return ResultUtils.success(b);
     }
 
     /**
@@ -116,5 +127,26 @@ public class UserController {
     public BaseResponse<UserVO> getUserDetail(@PathVariable Long id) {
         UserVO userVO = sysUserService.getUserById(id);
         return ResultUtils.success(userVO);
+    }
+
+
+    /**
+     * 修改个人信息
+     */
+    @PostMapping("/update/profile")
+    public BaseResponse<Boolean> updateProfile(@RequestBody UserProfileUpdateDTO request) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        boolean result = sysUserService.updateProfile(userId, request);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 修改个人密码
+     */
+    @PostMapping("/update/pwd")
+    public BaseResponse<Boolean> updatePwd(@RequestBody @Valid UserPwdUpdateDTO request) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        boolean b = sysUserService.updatePwd(userId, request);
+        return ResultUtils.success(b);
     }
 }

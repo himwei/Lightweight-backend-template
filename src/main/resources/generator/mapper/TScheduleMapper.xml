@@ -13,10 +13,11 @@
             <result property="bookedNum" column="booked_num" />
             <result property="status" column="status" />
             <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,doctor_id,work_date,shift_type,quota,booked_num,
+        id,doctor_id,work_date,shift_type,quota,booked_num,update_time,
         status,create_time
     </sql>
     <select id="selectScheduleVOPage" resultType="com.himwei.testtemplatebackend.model.vo.ScheduleVO">

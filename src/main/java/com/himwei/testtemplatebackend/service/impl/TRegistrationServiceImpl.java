@@ -8,6 +8,7 @@ import com.himwei.testtemplatebackend.common.PageDTO;
 import com.himwei.testtemplatebackend.exception.BusinessException;
 import com.himwei.testtemplatebackend.exception.ErrorCode;
 import com.himwei.testtemplatebackend.mapper.TScheduleMapper;
+import com.himwei.testtemplatebackend.model.dto.CancelRegistrationRequest;
 import com.himwei.testtemplatebackend.model.dto.DiagnosisRequest;
 import com.himwei.testtemplatebackend.model.dto.RegSubmitRequest;
 import com.himwei.testtemplatebackend.model.entity.TRegistration;
@@ -96,6 +97,46 @@ public class TRegistrationServiceImpl extends ServiceImpl<TRegistrationMapper, T
         this.save(reg);
 
         return reg.getId();
+    }
+
+    @Transactional(rollbackFor = Exception.class) // 开启事务，报错自动回滚
+    @Override
+    public Boolean cancelRegistration(CancelRegistrationRequest request) {
+        // 1. 获取当前登录用户ID
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // 2. 查询挂号单
+        TRegistration reg = this.getById(request.getRegId());
+        if (reg == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "挂号单不存在");
+        }
+
+        // 3. 安全校验：只能取消自己的挂号单
+        if (!reg.getPatientUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权操作他人的订单");
+        }
+
+        // 4. 状态校验：只有“已预约(0)”状态才能取消
+        // 如果是“已完成(1)”或“已取消(2)”，则报错
+        if (!reg.getStatus().equals(RegStatusEnum.BOOKED.getValue())) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "当前状态不可取消");
+        }
+
+        // 5. 更新挂号单状态 -> 已取消
+        reg.setStatus(RegStatusEnum.CANCELED.getValue());
+        boolean updateResult = this.updateById(reg);
+        if (!updateResult) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新状态失败");
+        }
+
+        // 6. 归还库存 (排班表 booked_num - 1)
+        int rows = scheduleMapper.decreaseBookedNum(reg.getScheduleId());
+        if (rows <= 0) {
+            // 理论上不应该走到这里，除非数据已经错乱（booked_num 已经是0了）
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "退号失败，库存数据异常");
+        }
+
+        return true;
     }
 
     @Override

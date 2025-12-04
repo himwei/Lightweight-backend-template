@@ -11,9 +11,10 @@
             <result property="location" column="location" />
             <result property="intro" column="intro" />
             <result property="createTime" column="create_time" />
+        <result property="isDeleted" column="is_deleted"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,dept_name,dept_code,location,intro,create_time
+        id,dept_name,dept_code,location,intro,create_time,is_deleted
     </sql>
 </mapper>

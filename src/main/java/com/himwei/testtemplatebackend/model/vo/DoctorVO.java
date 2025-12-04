@@ -18,5 +18,6 @@ public class DoctorVO implements Serializable {
     private String title;       // 职称
     private BigDecimal price;   // 挂号费
     private String intro;       // 简介
+    private Long deptId;
 
 }

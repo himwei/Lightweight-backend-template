@@ -3,6 +3,8 @@ package com.himwei.testtemplatebackend.model.entity;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -29,7 +31,7 @@ public class TSchedule implements Serializable {
      * 出诊日期 (2023-11-11)
      */
     @TableField(value = "work_date")
-    private Date workDate;
+    private LocalDate workDate;
 
     /**
      * 时段 (1:上午 2:下午)
@@ -59,7 +61,13 @@ public class TSchedule implements Serializable {
      *
      */
     @TableField(value = "create_time",fill = FieldFill.INSERT)
-    private Date createTime;
+    private LocalDateTime createTime;
+
+    /**
+     * ✅ 新增：更新时间 (插入和更新时都填充)
+     */
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

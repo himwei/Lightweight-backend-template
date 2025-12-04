@@ -23,10 +23,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.DigestUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +32,6 @@ import java.util.stream.Collectors;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         implements SysUserService {
 
-    private static final String SALT = "himwei";
 
     @Resource
     private SysRoleService sysRoleService;
@@ -82,8 +78,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         // 构建返回结果
         LoginVO loginVO = new LoginVO();
         loginVO.setId(user.getId());
-        loginVO.setUsername(user.getUserName());
-        loginVO.setNickname(user.getNickName());
+        loginVO.setUserName(user.getUserName());
+        loginVO.setNickName(user.getNickName());
         loginVO.setAvatar(user.getAvatar());
         loginVO.setToken(StpUtil.getTokenValue());
         loginVO.setRoles(roles);
@@ -102,14 +98,23 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         Page<SysUser> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
 
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(queryDTO.getUsername()), SysUser::getUserName, queryDTO.getUsername())
-                .like(StrUtil.isNotBlank(queryDTO.getNickname()), SysUser::getNickName, queryDTO.getNickname())
-                .eq(queryDTO.getStatus() != null, SysUser::getStatus, queryDTO.getStatus())
+
+        // ✅ 修复：支持 keyword 模糊搜索 (同时搜账号或昵称)
+        if (StrUtil.isNotBlank(queryDTO.getKeyword())) {
+            wrapper.and(w -> w.like(SysUser::getUserName, queryDTO.getKeyword())
+                    .or()
+                    .like(SysUser::getNickName, queryDTO.getKeyword()));
+        }
+
+        // 如果还需要单独支持精确筛选，可以保留下面的，但在单搜索框模式下通常不需要
+        // wrapper.like(StrUtil.isNotBlank(queryDTO.getUsername()), SysUser::getUserName, queryDTO.getUsername())
+        //        .like(StrUtil.isNotBlank(queryDTO.getNickname()), SysUser::getNickName, queryDTO.getNickname());
+
+        wrapper.eq(queryDTO.getStatus() != null, SysUser::getStatus, queryDTO.getStatus())
                 .orderByDesc(SysUser::getCreateTime);
 
         Page<SysUser> userPage = this.page(page, wrapper);
 
-        // 转换为 VO
         return userPage.convert(this::convertToVO);
     }
 
@@ -118,7 +123,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     public Long addUser(UserAddDTO addDTO) {
         // 检查用户名是否存在
         long count = this.lambdaQuery()
-                .eq(SysUser::getUserName, addDTO.getUsername())
+                .eq(SysUser::getUserName, addDTO.getUserName())
                 .count();
         if (count > 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名已存在");
@@ -128,7 +133,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         SysUser user = new SysUser();
         BeanUtil.copyProperties(addDTO, user);
         // 实际项目中应该加密存储密码
-        // user.setPassword(DigestUtils.md5DigestAsHex((addDTO.getPassword() + SALT).getBytes()));
+//        user.setPassWord(DigestUtils.md5DigestAsHex((addDTO.getPassword() + SALT).getBytes()));
+        user.setPassWord(passwordUtils.encrypt(addDTO.getPassWord()));
+
 
         this.save(user);
 
@@ -142,7 +149,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateUser(UserUpdateDTO updateDTO) {
+    public boolean updateUser(UserUpdateDTO updateDTO) {
         // 检查用户是否存在
         SysUser existUser = this.getById(updateDTO.getId());
         if (existUser == null) {
@@ -152,17 +159,22 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         // 更新用户
         SysUser user = new SysUser();
         BeanUtil.copyProperties(updateDTO, user);
-        this.updateById(user);
+        boolean b = this.updateById(user);
+        if (!b) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "更新失败");
+        }
 
         // 更新角色
         if (updateDTO.getRoleIds() != null) {
             sysRoleService.assignRoles(updateDTO.getId(), updateDTO.getRoleIds());
         }
+
+        return true;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteUser(Long id) {
+    public boolean deleteUser(Long id) {
         SysUser user = this.getById(id);
         if (user == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
@@ -173,7 +185,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "不能删除自己");
         }
 
-        this.removeById(id);
+        boolean b = this.removeById(id);
+        if (!b) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "删除失败");
+        }
+
+        // 登出
+        StpUtil.logout(id);
+
+        return true;
     }
 
     @Override
@@ -204,8 +224,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long userRegister(UserRegisterDTO registerDTO) {
-        String username = registerDTO.getUsername();
-        String password = registerDTO.getPassword();
+        String username = registerDTO.getUserName();
+        String password = registerDTO.getPassWord();
         String checkPassword = registerDTO.getCheckPassword();
 
         // 1. 校验密码一致性
@@ -226,35 +246,73 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         user.setUserName(username);
         // TODO: 后续这里应该加盐加密，例如: DigestUtils.md5DigestAsHex((password + SALT).getBytes())
         // ★★★ 修改点：使用工具类加密密码 ★★★
-        user.setPassWord(passwordUtils.encrypt(registerDTO.getPassword()));
-        user.setNickName(registerDTO.getNickname());
+        user.setPassWord(passwordUtils.encrypt(registerDTO.getPassWord()));
+        user.setNickName(registerDTO.getNickName());
         user.setStatus(1); // 默认正常
 
         // 保存用户
-        this.save(user);
-
-        // 4. 分配默认角色 (假设 "user" 角色的 ID 是 2)
-        // 你需要先去数据库 sys_role 表里确认一下普通用户的角色ID是多少
-        // 或者根据 role_code = 'user' 去查 ID
-//        Long defaultRoleId = 2L;
-
-        // 如果想做的严谨一点，可以先查一下 'user' 角色的 ID
-//        SysRole userRole = sysRoleService.lambdaQuery().eq(SysRole::getRoleCode, "user").one();
-//        if (userRole != null) {
-//            defaultRoleId = userRole.getId();
-//        }
-
-//        // 分配角色
-//        List<Long> roleIds = new ArrayList<>();
-//        roleIds.add(defaultRoleId);
-//        sysRoleService.assignRoles(user.getId(), roleIds);
+        boolean saveResult = this.save(user);
+        if (!saveResult) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，保存用户出错");
+        }
 
         // 4. 分配默认角色
         // 使用 JDK 9+ 提供的 List.of() 方法，创建一个只包含 "普通用户ID" 的不可变列表
         // 优点：语法简洁、内存占用极低、线程安全
         // 注意：List.of() 返回的集合是不可变的，不能执行 add/remove 操作，但作为查询参数传递非常合适
-        sysRoleService.assignRoles(user.getId(), List.of(RoleEnum.USER.getId()));
+        // 默认注册走的是患者角色
+        sysRoleService.assignRoles(user.getId(), List.of(RoleEnum.PATIENT.getId()));
 
         return user.getId();
+    }
+
+    @Override
+    public boolean resetPwd(UserResetPwdDTO resetPwdDTO) {
+        Long id = resetPwdDTO.getId();
+
+        // 查询用户
+        SysUser user = this.lambdaQuery()
+                .eq(SysUser::getId, id)
+                .one();
+
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+        }
+
+        // 重置密码
+        user.setPassWord(passwordUtils.encrypt("123456"));
+        boolean b = this.updateById(user);
+        if (!b) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "重置密码失败");
+        }
+        // 登出
+        StpUtil.logout(id);
+
+        return true;
+    }
+
+
+    @Override
+    public boolean updateProfile(Long userId, UserProfileUpdateDTO request) {
+        SysUser user = new SysUser();
+        user.setId(userId);
+        user.setNickName(request.getNickName());
+        user.setPhone(request.getPhone());
+        user.setEmail(request.getEmail());
+        user.setAvatar(request.getAvatar());
+        return this.updateById(user);
+    }
+
+    @Override
+    public boolean updatePwd(Long userId, UserPwdUpdateDTO request) {
+        SysUser user = this.getById(userId);
+        // 校验旧密码
+        String oldMd5 = passwordUtils.encrypt(request.getOldPassword());
+        if (!oldMd5.equals(user.getPassWord())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "旧密码错误");
+        }
+        // 更新新密码
+        user.setPassWord(passwordUtils.encrypt(request.getNewPassword()));
+        return this.updateById(user);
     }
 }

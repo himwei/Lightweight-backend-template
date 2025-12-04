@@ -26,6 +26,13 @@ public interface TScheduleMapper extends BaseMapper<TSchedule> {
      */
     @Update("update t_schedule set booked_num = booked_num + 1 where id = #{scheduleId} and booked_num < quota")
     int increaseBookedNum(@Param("scheduleId") Long scheduleId);
+
+    /**
+     * 取消：回退号源
+     * 逻辑：已预约数 - 1，且不能小于 0 (防止数据错乱)
+     */
+    @Update("update t_schedule set booked_num = booked_num - 1 where id = #{scheduleId} and booked_num > 0")
+    int decreaseBookedNum(@Param("scheduleId") Long scheduleId);
 }
 
 

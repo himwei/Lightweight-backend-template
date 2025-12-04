@@ -3,6 +3,7 @@ package com.himwei.testtemplatebackend.model.entity;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -41,7 +42,7 @@ public class TRegistration implements Serializable {
      * 实际就诊时间
      */
     @TableField(value = "visit_time")
-    private Date visitTime;
+    private LocalDateTime visitTime;
 
     /**
      * 医生诊断结果/医嘱
@@ -53,7 +54,13 @@ public class TRegistration implements Serializable {
      * 预约时间
      */
     @TableField(value = "create_time",fill = FieldFill.INSERT)
-    private Date createTime;
+    private LocalDateTime createTime;
+
+    /**
+     * 更新时间
+     */
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

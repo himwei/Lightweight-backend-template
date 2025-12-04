@@ -10,18 +10,20 @@
             <result property="deptId" column="dept_id" />
             <result property="title" column="title" />
             <result property="price" column="price" />
+        <result property="updateTime" column="update_time"/>
             <result property="intro" column="intro" />
             <result property="createTime" column="create_time" />
     </resultMap>
 
     <sql id="Base_Column_List">
         id,user_id,dept_id,title,price,intro,
-        create_time
+        create_time,update_time
     </sql>
 
     <select id="selectDoctorVOPage" resultType="com.himwei.testtemplatebackend.model.vo.DoctorVO">
         SELECT
         d.id,
+        d.dept_id AS deptId,
         u.nickname AS doctorName,
         u.avatar,
         dep.dept_name AS deptName,

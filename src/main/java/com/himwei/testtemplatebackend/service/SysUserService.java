@@ -6,6 +6,7 @@ import com.himwei.testtemplatebackend.model.dto.*;
 import com.himwei.testtemplatebackend.model.entity.SysUser;
 import com.himwei.testtemplatebackend.model.vo.LoginVO;
 import com.himwei.testtemplatebackend.model.vo.UserVO;
+import jakarta.validation.Valid;
 
 public interface SysUserService extends IService<SysUser> {
 
@@ -32,12 +33,12 @@ public interface SysUserService extends IService<SysUser> {
     /**
      * 修改用户
      */
-    void updateUser(UserUpdateDTO updateDTO);
+    boolean updateUser(UserUpdateDTO updateDTO);
 
     /**
      * 删除用户
      */
-    void deleteUser(Long id);
+    boolean deleteUser(Long id);
 
     /**
      * 根据ID获取用户详情
@@ -50,4 +51,10 @@ public interface SysUserService extends IService<SysUser> {
      * @return 新用户ID
      */
     Long userRegister(UserRegisterDTO registerDTO);
+
+    boolean resetPwd(@Valid UserResetPwdDTO resetPwdDTO);
+
+    boolean updateProfile(Long userId, UserProfileUpdateDTO request);
+
+    boolean updatePwd(Long userId, @Valid UserPwdUpdateDTO request);
 }

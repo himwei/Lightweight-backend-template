@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -15,7 +16,7 @@ public class RegistrationVO implements Serializable {
     private Long id;              // 挂号单 ID
 
     // --- 排班/就诊信息 ---
-    private Date workDate;        //就诊日期
+    private LocalDateTime workDate;        //就诊日期
     private Integer shiftType;    //时段 (1:上午 2:下午)
     private Integer status;       //状态 (0:预约 1:完成 2:取消)
     private String diagnosis;     //医嘱
@@ -28,5 +29,8 @@ public class RegistrationVO implements Serializable {
     // --- 患者信息 (医生端看的时候需要) ---
     private String patientName;   //患者姓名
     private String patientPhone;  //患者电话
+
+    // ✅ 新增字段：下单时间 (对应数据库 create_time)
+    private LocalDateTime createTime;
 
 }

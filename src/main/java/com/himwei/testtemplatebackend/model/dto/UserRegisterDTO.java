@@ -12,17 +12,17 @@ public class UserRegisterDTO {
     @Schema(description = "用户名", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "用户名不能为空")
     @Size(min = 4, max = 20, message = "用户名长度必须在 4-20 之间")
-    private String username;
+    private String userName;
 
     @Schema(description = "密码", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "密码不能为空")
     @Size(min = 6, max = 20, message = "密码长度必须在 6-20 之间")
-    private String password;
+    private String passWord;
 
     @Schema(description = "确认密码", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "确认密码不能为空")
     private String checkPassword;
 
     @Schema(description = "昵称")
-    private String nickname;
+    private String nickName;
 }

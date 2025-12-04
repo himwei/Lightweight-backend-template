@@ -3,6 +3,7 @@ package com.himwei.testtemplatebackend.model.entity;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -47,7 +48,18 @@ public class TDepartment implements Serializable {
      *
      */
     @TableField(value = "create_time",fill = FieldFill.INSERT)
-    private Date createTime;
+    private LocalDateTime createTime;
+
+    @TableLogic // ✅ 核心注解
+    @TableField("is_deleted")
+    private Integer isDeleted;
+
+    /**
+     * ✅ 新增：更新时间 (插入和更新时都填充)
+     */
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
+
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

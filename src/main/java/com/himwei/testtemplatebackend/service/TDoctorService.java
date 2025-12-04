@@ -1,7 +1,9 @@
 package com.himwei.testtemplatebackend.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.himwei.testtemplatebackend.model.dto.DoctorAddDTO;
 import com.himwei.testtemplatebackend.model.dto.DoctorQueryDTO;
+import com.himwei.testtemplatebackend.model.dto.DoctorUpdateDTO;
 import com.himwei.testtemplatebackend.model.entity.TDoctor;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.himwei.testtemplatebackend.model.vo.DoctorVO;
@@ -20,4 +22,10 @@ public interface TDoctorService extends IService<TDoctor> {
 
     // 获取当前登录医生的详细信息
     DoctorVO getDoctorProfile(Long userId);
+
+    // 新增医生 (包含创建账号)
+    Long addDoctor(DoctorAddDTO request);
+
+    // 更新医生信息
+    boolean updateDoctorInfo(DoctorUpdateDTO request);
 }

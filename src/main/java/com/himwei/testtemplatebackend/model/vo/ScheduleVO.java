@@ -3,6 +3,7 @@ package com.himwei.testtemplatebackend.model.vo;
 import lombok.Data;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -14,7 +15,7 @@ public class ScheduleVO implements Serializable {
     private String title;        // 医生职称
     private BigDecimal price;    // 挂号费
 
-    private Date workDate;       // 出诊日期
+    private LocalDateTime workDate;       // 出诊日期
     private Integer shiftType;   // 1上午 2下午
     private Integer quota;       // 总号源
     private Integer bookedNum;   // 已挂号数

@@ -8,9 +8,11 @@ import lombok.EqualsAndHashCode;
 @Data
 public class UserQueryDTO extends PageDTO {
 
-    private String username;
+    private String userName;
 
-    private String nickname;
+    private String nickName;
 
     private Integer status;
+
+    private String keyword;
 }

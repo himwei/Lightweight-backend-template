@@ -2,6 +2,7 @@ package com.himwei.testtemplatebackend.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.himwei.testtemplatebackend.common.PageDTO;
+import com.himwei.testtemplatebackend.model.dto.CancelRegistrationRequest;
 import com.himwei.testtemplatebackend.model.dto.DiagnosisRequest;
 import com.himwei.testtemplatebackend.model.dto.RegSubmitRequest;
 import com.himwei.testtemplatebackend.model.entity.TRegistration;
@@ -24,6 +25,15 @@ public interface TRegistrationService extends IService<TRegistration> {
      * @return 挂号单ID
      */
     Long submitRegistration(RegSubmitRequest request);
+
+
+    /**
+     * 取消挂号 (核心业务)
+     *
+     * @param request 挂号请求
+     * @return 挂号单ID
+     */
+    Boolean cancelRegistration(CancelRegistrationRequest request);
 
     /**
      * 分页查询我的挂号记录 (患者端)

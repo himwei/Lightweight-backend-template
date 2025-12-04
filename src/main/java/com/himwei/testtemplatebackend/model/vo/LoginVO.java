@@ -8,9 +8,9 @@ public class LoginVO {
 
     private Long id;
 
-    private String username;
+    private String userName;
 
-    private String nickname;
+    private String nickName;
 
     private String avatar;
 

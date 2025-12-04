@@ -125,3 +125,15 @@ CREATE TABLE `t_registration` (
                                   KEY `idx_patient` (`patient_user_id`),
                                   KEY `idx_schedule` (`schedule_id`)
 ) ENGINE=InnoDB COMMENT='挂号记录表';
+
+
+ALTER TABLE `t_department`
+    ADD COLUMN `is_deleted` tinyint(2) DEFAULT '0' COMMENT '逻辑删除(0:未删 1:已删)';
+ALTER TABLE `t_department`
+    ADD COLUMN `update_time` datetime DEFAULT NULL COMMENT '更新时间';
+
+ALTER TABLE `t_schedule`
+    ADD COLUMN `update_time` datetime DEFAULT NULL COMMENT '更新时间';
+
+ALTER TABLE `t_doctor`
+    ADD COLUMN `update_time` datetime DEFAULT NULL COMMENT '更新时间';
